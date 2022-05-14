@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { Observable, from } from 'rxjs';
-import { map, startWith, filter, pluck } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { map, startWith, filter, pluck, findIndex } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
+import { MatAutocompleteTrigger } from '@angular/material';
 
 @Component({
   selector: 'autocomplete-query-based',
@@ -10,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['autocomplete-query-based.css'],
 })
 export class AutoCompleteQueryBased implements OnInit {
+  @ViewChild('search', {static: false}) search: ElementRef;
 
   constructor(private http: HttpClient) { }
 
@@ -43,6 +45,7 @@ export class AutoCompleteQueryBased implements OnInit {
 
   private defaultSelection: string = Action.Field;
   private currentEvent: string;
+  private currentValue: string
   private response: ApiResponse[] = [];
 
   ngOnInit() {
@@ -97,6 +100,19 @@ export class AutoCompleteQueryBased implements OnInit {
             "Typescript"
           ]
         }
+      },
+      {
+        "Result": {
+          "DisplayName": "Project",
+          "SearchType": "Field",
+          "AutoCompleteValues": [
+            "Credit-Suisse",
+            "ATNT",
+            "Standard Chartedred",
+            "American Express",
+            "Well fargo"
+          ]
+        }
       }
     ]);
 
@@ -115,9 +131,24 @@ export class AutoCompleteQueryBased implements OnInit {
     return optionListToBePopulated.filter(option => option.toLowerCase().indexOf(searchText.toLowerCase().trim()) != -1);
   }
 
+  selectionMade(event: Event, trigger: MatAutocompleteTrigger) {
+    event.stopPropagation();
+    trigger.openPanel();
+    if (this.currentEvent === Action.Value) {
+      this.search.nativeElement.value = this.search.nativeElement.value.concat(" ''");
+    }
+  }
+
   displayFn(value: string): string {
-    if (!!value)
+    if (!!value) {
       this.searchList.push(new SelectedOption(value, this.currentEvent, this.getNextEvent(this.currentEvent)));
+      // setTimeout(() => {
+      //   this.search.nativeElement.blur();
+      // }, 100);
+      // setTimeout(() => {
+      //   this.search.nativeElement.focus();
+      // }, 200);
+    }
     return this.searchList.length > 0 ? this.searchList.map(s => s.Value).join(' ') : '';
   }
 
@@ -186,6 +217,27 @@ export class AutoCompleteQueryBased implements OnInit {
         return this.searchList[i];
     }
     return undefined;
+  }
+
+  private hasValueInSelectionList(queryString: string, index: number) {
+    return this.selectionList[index].Value.some(val => val.toLowerCase() === queryString.toLowerCase());
+  }
+
+  onEnter(event: any):any {
+    // event.stopPropagation();
+    // event.preventDefault();
+    // event.stopImmediatePropagation();
+    const strList =  event.target.value.split(" ");
+    const value = strList[strList.length - 1];
+    const isFieldOrValue = [Action.Value.toString()].includes(this.currentEvent);
+    if(isFieldOrValue) {
+      const index = this.selectionList.findIndex(x => x.Name ===this.currentEvent);
+      if (!this.hasValueInSelectionList(value, index)) {
+        this.selectionList[index].Value.push(value);
+        this.displayFn(value);
+      }
+    }
+    // this.searchList.push(new SelectedOption(event.target.value, this.currentEvent, this.getNextEvent(this.currentEvent)));
   }
 }
 
