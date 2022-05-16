@@ -1,27 +1,29 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { Observable, from, of } from 'rxjs';
-import { map, startWith, filter, pluck, findIndex } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
-import { MatAutocompleteTrigger } from '@angular/material';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {FormControl} from '@angular/forms';
+import {Observable, of} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
+import {HttpClient} from '@angular/common/http';
+import {MatAutocompleteTrigger} from '@angular/material';
 
 @Component({
   selector: 'query-builder',
   templateUrl: 'query-builder.html',
   styleUrls: ['query-builder.css'],
 })
+// tslint:disable-next-line:component-class-suffix
 export class QueryBuilder implements OnInit {
   @ViewChild('search', {static: false}) search: ElementRef;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {
+  }
 
   myControl = new FormControl();
   hiddenCtrl = new FormControl();
 
-  private fieldList: SuggestionDetails = { Name: Action.Field, Value: [], Valid: ['string'] };
-  private operatorList: SuggestionDetails = { Name: Action.Operator, Value: ['=', '!=', '>'], Valid: ['string'] };
-  private valueList: SuggestionDetails = { Name: Action.Value, Value: [], Valid: ['string'] };
-  private expressionList: SuggestionDetails = { Name: Action.Expression, Value: ['And', 'Or'], Valid: ['string'] };
+  private fieldList: SuggestionDetails = {Name: Action.Field, Value: [], Valid: ['string']};
+  private operatorList: SuggestionDetails = {Name: Action.Operator, Value: ['=', '!=', '>'], Valid: ['string']};
+  private valueList: SuggestionDetails = {Name: Action.Value, Value: [], Valid: ['string']};
+  private expressionList: SuggestionDetails = {Name: Action.Expression, Value: ['And', 'Or'], Valid: ['string']};
 
   private operator: string[] = this.operatorList.Value;
   private value: string[] = this.valueList.Value;
@@ -36,20 +38,20 @@ export class QueryBuilder implements OnInit {
 
   private get selectionList(): SelectionDict[] {
     return [
-      { Name: Action.Field, Value: this.field, NextSelection: Action.Operator },
-      { Name: Action.Operator, Value: this.operator, NextSelection: Action.Value },
-      { Name: Action.Value, Value: this.field, NextSelection: Action.Expression },
-      { Name: Action.Expression, Value: this.expression, NextSelection: Action.Field }
+      {Name: Action.Field, Value: this.field, NextSelection: Action.Operator},
+      {Name: Action.Operator, Value: this.operator, NextSelection: Action.Value},
+      {Name: Action.Value, Value: this.field, NextSelection: Action.Expression},
+      {Name: Action.Expression, Value: this.expression, NextSelection: Action.Field}
     ];
   }
 
   private defaultSelection: string = Action.Field;
   private currentEvent: string;
-  private currentValue: string
+  private currentValue: string;
   private response: ApiResponse[] = [];
 
   ngOnInit() {
-    this.fieldList
+    this.fieldList;
     this.getSearchObject();
     this.filteredOptions = this.myControl.valueChanges.pipe(
       startWith(''),
@@ -70,14 +72,16 @@ export class QueryBuilder implements OnInit {
     response.subscribe(val => {
       this.fieldList.Value = val;
       this.myControl.setValue(''); // trigger the autocomplete to populate new values
-    })
-    
+    });
+
   }
 
   // autocomplete material ui events
   _filter(value: string): string[] {
-    let lastSelection = this.searchList[this.searchList.length-1];
-    if (lastSelection && lastSelection.Next === Action.Value) return [];
+    let lastSelection = this.searchList[this.searchList.length - 1];
+    if (lastSelection && lastSelection.Next === Action.Value) {
+      return [];
+    }
     let optionListToBePopulated: string[] = this.getOptionList();
     var searchText = this.getSearchText(value);
     return optionListToBePopulated.filter(option => option.toLowerCase().indexOf(searchText.toLowerCase().trim()) != -1);
@@ -91,6 +95,9 @@ export class QueryBuilder implements OnInit {
   displayFn(value: string): string {
     if (!!value) {
       this.searchList.push(new SelectedOption(value, this.currentEvent, this.getNextEvent(this.currentEvent)));
+    }
+    if (this.currentEvent === Action.Operator) {
+      return this.searchList.length > 0 ? this.searchList.map(s => s.Value).join(' ').concat(' ') : '';
     }
     return this.searchList.length > 0 ? this.searchList.map(s => s.Value).join(' ') : '';
   }
@@ -110,16 +117,20 @@ export class QueryBuilder implements OnInit {
   }
 
   private getValues(currentList: SelectionDict): string[] {
-    if (this.currentEvent.toLowerCase() != 'value') return currentList.Value;
+    if (this.currentEvent.toLowerCase() != 'value') {
+      return currentList.Value;
+    }
     return [];
   }
-  // ------------- Get Autocomplete List END --------------------
 
+  // ------------- Get Autocomplete List END --------------------
 
 
   // --------------- START : Get the search text based on which the autocomplete will populate --------
   private getSearchText(value: string): string {
-    if(this.currentEvent === Action.Expression) return '';
+    if (this.currentEvent !== Action.Value) {
+      return '';
+    }
     var oldText = this.searchList.map(s => s.Value).join(' ');
     this.handleBackspace(value);
     return value.trim().replace(oldText, '');
@@ -139,8 +150,9 @@ export class QueryBuilder implements OnInit {
       prevListValue = filteredResponse ? filteredResponse.AutoCompleteValues : [];
     }
 
-    if ((prevListValue ? prevListValue.indexOf(searchValue) === -1 : false) && oldText.trim().length > searchValue.trim().length)
+    if ((prevListValue ? prevListValue.indexOf(searchValue) === -1 : false) && oldText.trim().length > searchValue.trim().length) {
       this.searchList.pop();
+    }
   }
 
   // --------------- END : Get the search text based on which the autocomplete will populate --------
@@ -151,11 +163,14 @@ export class QueryBuilder implements OnInit {
   }
 
   private getlastField(): SelectedOption | undefined {
-    if (this.searchList.length === 0) return undefined;
+    if (this.searchList.length === 0) {
+      return undefined;
+    }
     let i: number = this.searchList.length - 1;
     for (i; i >= 0; i--) {
-      if (this.searchList[i].PopulatedFrom == Action.Field)
+      if (this.searchList[i].PopulatedFrom == Action.Field) {
         return this.searchList[i];
+      }
     }
     return undefined;
   }
@@ -164,14 +179,19 @@ export class QueryBuilder implements OnInit {
     return this.selectionList[index].Value.some(val => val.toLowerCase() === queryString.toLowerCase());
   }
 
-  onEnter(event: any):any {
+  onEnter(event: any): any {
     // event.stopPropagation();
     // event.preventDefault();
     // event.stopImmediatePropagation();
-    const strList =  event.target.value.split(" ");
-    const value = strList[strList.length - 1];
-    this.currentEvent = Action.Value;
-    this.displayFn(value);
+    const optrs = this.operatorList.Value.join('');
+    const reg = new RegExp('[' + optrs + ']+');
+
+    const strList = event.target.value.split(reg);
+    const value = strList[strList.length - 1].trim();
+    if (this.currentEvent === Action.Operator) {
+      this.currentEvent = Action.Value;
+      this.displayFn(value);
+    }
   }
 }
 

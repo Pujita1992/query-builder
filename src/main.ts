@@ -8,7 +8,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {DemoMaterialModule} from './app/material-module';
-import { QueryBuilder } from './app/queryBuilderInput/query-builder';
+import {QueryBuilder} from './app/queryBuilder/query-builder';
 
 @NgModule({
   imports: [
