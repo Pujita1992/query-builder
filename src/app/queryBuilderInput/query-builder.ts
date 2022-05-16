@@ -6,11 +6,11 @@ import { HttpClient } from '@angular/common/http';
 import { MatAutocompleteTrigger } from '@angular/material';
 
 @Component({
-  selector: 'autocomplete-query-based',
-  templateUrl: 'autocomplete-query-based.html',
-  styleUrls: ['autocomplete-query-based.css'],
+  selector: 'query-builder-input',
+  templateUrl: 'query-builder.html',
+  styleUrls: ['query-builder.css'],
 })
-export class AutoCompleteQueryBased implements OnInit {
+export class QueryBuilder implements OnInit {
   @ViewChild('search', {static: false}) search: ElementRef;
 
   constructor(private http: HttpClient) { }
@@ -38,7 +38,7 @@ export class AutoCompleteQueryBased implements OnInit {
     return [
       { Name: Action.Field, Value: this.field, NextSelection: Action.Operator },
       { Name: Action.Operator, Value: this.operator, NextSelection: Action.Value },
-      { Name: Action.Value, Value: this.value, NextSelection: Action.Expression },
+      { Name: Action.Value, Value: this.field, NextSelection: Action.Expression },
       { Name: Action.Expression, Value: this.expression, NextSelection: Action.Field }
     ];
   }
@@ -61,64 +61,14 @@ export class AutoCompleteQueryBased implements OnInit {
 
   getSearchObject(): void {
     // HTTP response
-    var response = from([
-      {
-        "Result": {
-          "DisplayName": "Name",
-          "SearchType": "Field",
-          "AutoCompleteValues": [
-            "Biswa",
-            "Kalyan",
-            "Das",
-            "Vicky",
-            "Awesome"
-          ]
-        }
-      },
-      {
-        "Result": {
-          "DisplayName": "Company",
-          "SearchType": "Field",
-          "AutoCompleteValues": [
-            "Youtube",
-            "Git",
-            "Techno",
-            "Saviour",
-            "TechnoSaviour"
-          ]
-        }
-      },
-      {
-        "Result": {
-          "DisplayName": "Language",
-          "SearchType": "Field",
-          "AutoCompleteValues": [
-            "DotNet",
-            "Python",
-            "Java",
-            "Javascript",
-            "Typescript"
-          ]
-        }
-      },
-      {
-        "Result": {
-          "DisplayName": "Project",
-          "SearchType": "Field",
-          "AutoCompleteValues": [
-            "Credit-Suisse",
-            "ATNT",
-            "Standard Chartedred",
-            "American Express",
-            "Well fargo"
-          ]
-        }
-      }
+    var response = of([
+      'Name',
+      'Language',
+      'Project Type'
     ]);
 
     response.subscribe(val => {
-      this.response.push(val.Result);
-      this.fieldList.Value = this.response.filter(r => r.SearchType == Action.Field).map<string>(r => r.DisplayName.toString());
+      this.fieldList.Value = val;
       this.myControl.setValue(''); // trigger the autocomplete to populate new values
     })
     
@@ -126,6 +76,8 @@ export class AutoCompleteQueryBased implements OnInit {
 
   // autocomplete material ui events
   _filter(value: string): string[] {
+    let lastSelection = this.searchList[this.searchList.length-1];
+    if (lastSelection && lastSelection.Next === Action.Value) return [];
     let optionListToBePopulated: string[] = this.getOptionList();
     var searchText = this.getSearchText(value);
     return optionListToBePopulated.filter(option => option.toLowerCase().indexOf(searchText.toLowerCase().trim()) != -1);
@@ -139,12 +91,6 @@ export class AutoCompleteQueryBased implements OnInit {
   displayFn(value: string): string {
     if (!!value) {
       this.searchList.push(new SelectedOption(value, this.currentEvent, this.getNextEvent(this.currentEvent)));
-      // setTimeout(() => {
-      //   this.search.nativeElement.blur();
-      // }, 100);
-      // setTimeout(() => {
-      //   this.search.nativeElement.focus();
-      // }, 200);
     }
     return this.searchList.length > 0 ? this.searchList.map(s => s.Value).join(' ') : '';
   }
@@ -165,10 +111,7 @@ export class AutoCompleteQueryBased implements OnInit {
 
   private getValues(currentList: SelectionDict): string[] {
     if (this.currentEvent.toLowerCase() != 'value') return currentList.Value;
-    var selectedField = this.getlastField();
-    var selectedValue = selectedField ? selectedField.Value : ''
-    var filteredResponse = this.response.find(r => r.DisplayName === selectedValue);
-    return filteredResponse ? filteredResponse.AutoCompleteValues : [];
+    return [];
   }
   // ------------- Get Autocomplete List END --------------------
 
@@ -176,6 +119,7 @@ export class AutoCompleteQueryBased implements OnInit {
 
   // --------------- START : Get the search text based on which the autocomplete will populate --------
   private getSearchText(value: string): string {
+    if(this.currentEvent === Action.Expression) return '';
     var oldText = this.searchList.map(s => s.Value).join(' ');
     this.handleBackspace(value);
     return value.trim().replace(oldText, '');
@@ -226,15 +170,8 @@ export class AutoCompleteQueryBased implements OnInit {
     // event.stopImmediatePropagation();
     const strList =  event.target.value.split(" ");
     const value = strList[strList.length - 1];
-    const isFieldOrValue = [Action.Value.toString()].includes(this.currentEvent);
-    if(isFieldOrValue) {
-      const index = this.selectionList.findIndex(x => x.Name ===this.currentEvent);
-      if (!this.hasValueInSelectionList(value, index)) {
-        this.selectionList[index].Value.push(value);
-        this.displayFn(value);
-      }
-    }
-    // this.searchList.push(new SelectedOption(event.target.value, this.currentEvent, this.getNextEvent(this.currentEvent)));
+    this.currentEvent = Action.Value;
+    this.displayFn(value);
   }
 }
 

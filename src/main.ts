@@ -8,7 +8,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {DemoMaterialModule} from './app/material-module';
-import { AutoCompleteQueryBased } from './app/autocomplete/autocomplete-query-based';
+import { QueryBuilder } from './app/queryBuilderInput/query-builder';
 
 @NgModule({
   imports: [
@@ -20,9 +20,9 @@ import { AutoCompleteQueryBased } from './app/autocomplete/autocomplete-query-ba
     MatNativeDateModule,
     ReactiveFormsModule,
   ],
-  entryComponents: [AutoCompleteQueryBased],
-  declarations: [AutoCompleteQueryBased],
-  bootstrap: [AutoCompleteQueryBased],
+  entryComponents: [QueryBuilder],
+  declarations: [QueryBuilder],
+  bootstrap: [QueryBuilder],
   providers: []
 })
 export class AppModule {}
